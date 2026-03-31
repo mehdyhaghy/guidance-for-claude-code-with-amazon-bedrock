@@ -209,9 +209,26 @@ class MultiProviderAuth:
             "max_session_duration", 43200 if profile_config.get("federation_type") == "direct" else 28800
         )
 
-        # Validate confidential client has a secret
-        if profile_config.get("client_type") == "confidential" and not profile_config.get("client_secret"):
-            raise ValueError("Confidential client requires 'client_secret' in configuration")
+        # For confidential clients, load client_secret from OS secure storage (not config.json)
+        if profile_config.get("client_type") == "confidential":
+            try:
+                secret = keyring.get_password("claude-code-with-bedrock", f"{self.profile}-client-secret")
+            except Exception as e:
+                raise ValueError(
+                    "Failed to access OS secure storage for client secret. "
+                    "Ensure a keyring backend is available (macOS Keychain, Windows Credential Manager, "
+                    f"or Linux Secret Service): {e}"
+                ) from e
+            if not secret:
+                raise ValueError(
+                    f"Confidential client secret not found in OS secure storage for profile '{self.profile}'. "
+                    "Run the installer to configure it, or store manually:\n"
+                    "  python -c \"import keyring; keyring.set_password("
+                    f"'claude-code-with-bedrock', '{self.profile}-client-secret', '<your-secret>')\""
+                )
+            profile_config["client_secret"] = secret
+            # Remove any plaintext secret from config to prevent accidental use
+            profile_config.pop("client_secret_plaintext", None)
 
         return profile_config
 

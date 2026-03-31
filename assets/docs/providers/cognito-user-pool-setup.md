@@ -244,7 +244,6 @@ Update your `config.json` profile:
       "provider_type": "cognito",
       "provider_domain": "<domain-prefix>.auth.<region>.amazoncognito.com",
       "client_id": "<confidential-client-id>",
-      "client_secret": "<client-secret-from-secrets-manager>",
       "client_type": "confidential",
       "identity_pool_id": "<your-identity-pool-id>"
     }
@@ -252,4 +251,15 @@ Update your `config.json` profile:
 }
 ```
 
-> **Note**: PKCE is still used alongside the client secret for defense-in-depth.
+### Store the Client Secret in OS Secure Storage
+
+The client secret is stored in your OS keychain/credential manager — never in `config.json`:
+
+```bash
+# Retrieve the secret from Secrets Manager, then store in OS keychain
+python -c "import keyring; keyring.set_password('claude-code-with-bedrock', 'default-client-secret', '<client-secret-from-secrets-manager>')"
+```
+
+Replace `default` with your profile name if using a non-default profile.
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth. The secret is protected by macOS Keychain, Windows Credential Manager, or Linux Secret Service.

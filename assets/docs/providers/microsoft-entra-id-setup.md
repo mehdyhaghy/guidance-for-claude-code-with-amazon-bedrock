@@ -285,7 +285,6 @@ Update your `config.json` profile:
       "provider_type": "azure",
       "provider_domain": "login.microsoftonline.com/<tenant-id>",
       "client_id": "<application-client-id>",
-      "client_secret": "<client-secret-value>",
       "client_type": "confidential",
       "identity_pool_id": "<your-identity-pool-id>"
     }
@@ -293,4 +292,14 @@ Update your `config.json` profile:
 }
 ```
 
-> **Note**: PKCE is still used alongside the client secret for defense-in-depth. Remember to rotate the client secret before it expires.
+### Store the Client Secret in OS Secure Storage
+
+The client secret is stored in your OS keychain/credential manager — never in `config.json`:
+
+```bash
+python -c "import keyring; keyring.set_password('claude-code-with-bedrock', 'default-client-secret', '<client-secret-value>')"
+```
+
+Replace `default` with your profile name if using a non-default profile.
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth. The secret is protected by macOS Keychain, Windows Credential Manager, or Linux Secret Service. Remember to rotate the client secret before it expires.

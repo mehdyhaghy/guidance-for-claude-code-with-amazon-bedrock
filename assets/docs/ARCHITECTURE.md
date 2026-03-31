@@ -56,6 +56,11 @@ For organizations requiring detailed analytics, the optional analytics stack pro
 
 The authentication flow begins when Claude Code requests AWS credentials through the AWS CLI. The CLI invokes our credential process executable, which initiates an OAuth2 flow with PKCE (Proof Key for Code Exchange) to ensure security without requiring client secrets. A browser window opens automatically, directing the user to their organization's identity provider for authentication.
 
+The system supports two client modes:
+
+- **Public client** (default): Uses PKCE only — no client secret required. Recommended for most deployments.
+- **Confidential client**: Uses PKCE combined with a client secret stored in the OS secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
+
 After successful authentication, the identity provider redirects back to the local callback server with an authorization code. The credential process exchanges this code for OIDC tokens. The system then uses one of two authentication methods to obtain AWS credentials:
 
 ### Authentication Methods
@@ -74,7 +79,7 @@ The system supports two authentication methods:
 
 The authentication method is selected during initial configuration and both methods provide full CloudTrail attribution through session tags. These credentials include session tags containing the user's email and subject claim, ensuring every subsequent API call to Amazon Bedrock can be attributed to the specific user.
 
-The temporary credentials are returned to Claude Code through the standard AWS CLI credential process protocol. The entire flow operates without any client secrets or long-lived credentials, following zero-trust security principles. Credentials are cached securely using either the operating system's keyring service or encrypted session files, preventing repeated authentication requests during the session lifetime.
+The temporary credentials are returned to Claude Code through the standard AWS CLI credential process protocol. The default public client flow operates without any client secrets or long-lived credentials, following zero-trust security principles. For organizations requiring confidential client authentication, the client secret is stored in OS-level secure storage rather than in configuration files, preventing extraction through filesystem access or binary reverse engineering. Credentials are cached securely using either the operating system's keyring service or encrypted session files, preventing repeated authentication requests during the session lifetime.
 
 ## AWS CLI Credential Process Protocol
 
@@ -132,6 +137,8 @@ Credential theft represents the most common attack vector in authentication syst
 The OAuth2 authorization flow itself presents opportunities for interception attacks. An attacker who intercepts an authorization code could potentially exchange it for tokens. We implement PKCE (Proof Key for Code Exchange, RFC 7636) which generates a dynamic code verifier for each authentication request. This makes intercepted codes useless without the corresponding verifier. Additionally, a cryptographically random state parameter prevents cross-site request forgery attacks.
 
 Token storage on end-user machines requires careful consideration. We provide two storage options: integration with the operating system's keyring service, which provides encrypted storage with OS-level access controls, or session files with restricted filesystem permissions. Both approaches prevent other users or processes from accessing stored credentials. The system automatically cleans up expired credentials to minimize the attack surface.
+
+For confidential client deployments, the client secret is stored exclusively in OS-level secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service) — never in configuration files or application binaries. This prevents secret extraction through filesystem access or reverse engineering.
 
 Privilege escalation attempts are contained through IAM policy design. The federated role grants only the minimum permissions required to invoke Bedrock models in specified regions. Session tags embedded in every credential set ensure that users cannot access resources beyond their authorization. These tags flow through to CloudTrail, creating an immutable audit trail.
 
