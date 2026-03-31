@@ -198,3 +198,58 @@ aws cloudformation delete-stack --stack-name claude-code-user-pool
 ```
 
 Note: This will delete all users and configurations. Back up any important data first.
+
+---
+
+## Private (Confidential) Client Auth Flow
+
+By default, the credential provider uses a **public client** (`GenerateSecret: false`) with PKCE. If your organization requires a confidential client with a client secret, the CloudFormation template includes a `UserPoolConfidentialClient` resource.
+
+### Deploy with Confidential Client
+
+The `cognito-user-pool-setup.yaml` template automatically creates both clients:
+
+- **UserPoolClient** — public client (PKCE only, no secret)
+- **UserPoolConfidentialClient** — confidential client (with secret stored in Secrets Manager)
+
+After deployment, retrieve the confidential client values:
+
+```bash
+# Get Confidential Client ID
+aws cloudformation describe-stacks \
+  --stack-name claude-code-user-pool \
+  --query 'Stacks[0].Outputs[?OutputKey==`ConfidentialClientId`].OutputValue' \
+  --output text
+
+# Get Client Secret from Secrets Manager
+SECRET_ARN=$(aws cloudformation describe-stacks \
+  --stack-name claude-code-user-pool \
+  --query 'Stacks[0].Outputs[?OutputKey==`ConfidentialClientSecretArn`].OutputValue' \
+  --output text)
+
+aws secretsmanager get-secret-value \
+  --secret-id "$SECRET_ARN" \
+  --query 'SecretString' \
+  --output text
+```
+
+### Configure the Credential Provider
+
+Update your `config.json` profile:
+
+```json
+{
+  "profiles": {
+    "default": {
+      "provider_type": "cognito",
+      "provider_domain": "<domain-prefix>.auth.<region>.amazoncognito.com",
+      "client_id": "<confidential-client-id>",
+      "client_secret": "<client-secret-from-secrets-manager>",
+      "client_type": "confidential",
+      "identity_pool_id": "<your-identity-pool-id>"
+    }
+  }
+}
+```
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth.

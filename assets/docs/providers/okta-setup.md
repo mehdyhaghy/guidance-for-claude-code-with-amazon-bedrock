@@ -425,3 +425,47 @@ Once you've completed this Okta setup:
 - System Log: `https://your-domain.okta.com/admin/reports/system_log`
 
 Remember to replace `your-domain` with your actual Okta domain!
+
+---
+
+## Private (Confidential) Client Auth Flow
+
+By default, the credential provider uses a **public client** with PKCE. If your organization requires a confidential client with a client secret, follow these steps.
+
+### Create a Confidential Application in Okta
+
+1. In the Admin Console, navigate to **Applications** → **Applications**
+2. Click **Create App Integration**
+3. Select:
+   - **Sign-in method**: OIDC - OpenID Connect
+   - **Application type**: **Web Application** (not Native)
+4. Click **Next**
+5. Configure:
+   - **App integration name**: `Amazon Bedrock CLI Access (Confidential)`
+   - **Grant type**: ✅ Authorization Code, ✅ Refresh Token
+   - **Sign-in redirect URIs**: `http://localhost:8400/callback`
+   - **Sign-out redirect URIs**: (leave blank or match your setup)
+   - **Controlled access**: Assign to appropriate groups
+6. Click **Save**
+7. Note the **Client ID** and **Client Secret** from the application's General tab
+
+### Configure the Credential Provider
+
+Update your `config.json` profile:
+
+```json
+{
+  "profiles": {
+    "default": {
+      "provider_type": "okta",
+      "provider_domain": "your-domain.okta.com",
+      "client_id": "<confidential-client-id>",
+      "client_secret": "<client-secret>",
+      "client_type": "confidential",
+      "identity_pool_id": "<your-identity-pool-id>"
+    }
+  }
+}
+```
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth.

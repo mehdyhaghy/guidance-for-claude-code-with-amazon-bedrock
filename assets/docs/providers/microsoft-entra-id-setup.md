@@ -256,3 +256,41 @@ Once you've completed this setup:
    - Use groups to manage access at scale
    - Regular access reviews
    - Disable unused accounts promptly
+
+---
+
+## Private (Confidential) Client Auth Flow
+
+By default, the credential provider uses a **public client** with PKCE. If your organization requires a confidential client with a client secret, follow these steps.
+
+### Configure a Confidential Client in Entra ID
+
+1. Go to your existing App Registration (or create a new one)
+2. Navigate to **Certificates & secrets** → **Client secrets**
+3. Click **+ New client secret**
+4. Enter a description and choose an expiry period
+5. Click **Add** and **copy the secret value immediately** (it won't be shown again)
+6. Navigate to **Authentication**:
+   - Toggle **Allow public client flows** to **No**
+   - Ensure `http://localhost:8400/callback` is in the redirect URIs under **Mobile and desktop applications**
+
+### Configure the Credential Provider
+
+Update your `config.json` profile:
+
+```json
+{
+  "profiles": {
+    "default": {
+      "provider_type": "azure",
+      "provider_domain": "login.microsoftonline.com/<tenant-id>",
+      "client_id": "<application-client-id>",
+      "client_secret": "<client-secret-value>",
+      "client_type": "confidential",
+      "identity_pool_id": "<your-identity-pool-id>"
+    }
+  }
+}
+```
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth. Remember to rotate the client secret before it expires.

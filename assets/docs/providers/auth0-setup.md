@@ -368,3 +368,45 @@ For SSO with corporate identity providers:
 - Logs: `https://manage.auth0.com/dashboard/logs`
 
 Remember to navigate to the correct tenant if you have multiple!
+
+---
+
+## Private (Confidential) Client Auth Flow
+
+By default, the credential provider uses a **public client** with PKCE. If your organization requires a confidential client with a client secret, follow these steps.
+
+### Create a Confidential Application in Auth0
+
+1. In the Dashboard, navigate to **Applications** → **Applications**
+2. Click **+ Create Application**
+3. Enter:
+   - **Name**: `Amazon Bedrock CLI Access (Confidential)`
+   - **Choose an application type**: Select **Regular Web Applications**
+4. Click **Create**
+5. Go to the **Settings** tab:
+   - Note the **Client ID** and **Client Secret**
+   - **Allowed Callback URLs**: `http://localhost:8400/callback`
+   - **Allowed Logout URLs**: (match your setup)
+   - Under **Advanced Settings** → **Grant Types**: ensure **Authorization Code** and **Refresh Token** are checked
+6. Click **Save Changes**
+
+### Configure the Credential Provider
+
+Update your `config.json` profile:
+
+```json
+{
+  "profiles": {
+    "default": {
+      "provider_type": "auth0",
+      "provider_domain": "your-tenant.auth0.com",
+      "client_id": "<confidential-client-id>",
+      "client_secret": "<client-secret>",
+      "client_type": "confidential",
+      "identity_pool_id": "<your-identity-pool-id>"
+    }
+  }
+}
+```
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth.
