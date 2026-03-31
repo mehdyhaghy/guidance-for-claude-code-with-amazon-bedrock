@@ -204,9 +204,14 @@ class MultiProviderAuth:
         profile_config.setdefault("aws_region", "us-east-1")
         profile_config.setdefault("provider_type", "auto")
         profile_config.setdefault("credential_storage", "session")
+        profile_config.setdefault("client_type", "public")  # "public" (PKCE only) or "confidential" (with client_secret)
         profile_config.setdefault(
             "max_session_duration", 43200 if profile_config.get("federation_type") == "direct" else 28800
         )
+
+        # Validate confidential client has a secret
+        if profile_config.get("client_type") == "confidential" and not profile_config.get("client_secret"):
+            raise ValueError("Confidential client requires 'client_secret' in configuration")
 
         return profile_config
 
@@ -825,6 +830,10 @@ class MultiProviderAuth:
             "client_id": self.config["client_id"],
             "code_verifier": code_verifier,
         }
+
+        # Include client_secret for confidential clients
+        if self.config.get("client_type") == "confidential":
+            token_data["client_secret"] = self.config["client_secret"]
 
         # Build token endpoint URL
         token_url = f"{base_url}{self.provider_config['token_endpoint']}"
