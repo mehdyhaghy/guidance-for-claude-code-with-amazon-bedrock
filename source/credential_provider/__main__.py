@@ -1957,18 +1957,22 @@ def main():
     )
     parser.add_argument(
         "--set-client-secret",
-        action="store_true",
-        help="Store client secret in OS secure storage (for confidential client auth)",
+        nargs="?",
+        const=True,
+        default=None,
+        help="Store client secret in OS secure storage (pass value or omit for interactive prompt)",
     )
 
     args = parser.parse_args()
 
     # Handle set-secret before creating MultiProviderAuth (which validates the secret)
-    if args.set_client_secret:
-        import getpass
-
+    if args.set_client_secret is not None:
         profile = args.profile
-        secret = getpass.getpass(f"Enter client secret for profile '{profile}' (blank to clear): ")
+        if args.set_client_secret is True:
+            import getpass
+            secret = getpass.getpass(f"Enter client secret for profile '{profile}' (blank to clear): ")
+        else:
+            secret = args.set_client_secret
         try:
             if not secret:
                 try:
