@@ -256,3 +256,25 @@ Once you've completed this setup:
    - Use groups to manage access at scale
    - Regular access reviews
    - Disable unused accounts promptly
+
+---
+
+## Private (Confidential) Client Auth Flow
+
+To enforce the confidential client flow in Entra ID:
+
+1. Navigate to **App Registration** → **Authentication**
+2. Remove `http://localhost:8400/callback` from **Mobile and desktop applications** (if present)
+3. Under **Web** platform, add `http://localhost:8400/callback` as a redirect URI
+4. Set **Allow public client flows** to **No**
+5. Navigate to **Certificates & secrets** → **Client secrets** and create a new secret
+
+End users store the client secret after installing the distributed package:
+
+```bash
+credential-process --set-client-secret
+```
+
+To clear the secret and revert to public PKCE flow, run the same command and press Enter (blank).
+
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth.
