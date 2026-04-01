@@ -1057,3 +1057,41 @@ poetry run ccwb destroy [stack] [options]
 - Warns about manual cleanup requirements (e.g., CloudWatch LogGroups)
 
 **Note:** Some resources like CloudWatch LogGroups may require manual deletion.
+
+## Credential Process (End User Binary)
+
+The `credential-process` binary is the standalone executable installed on end user machines. It handles OAuth2/OIDC authentication and AWS credential retrieval.
+
+### Usage
+
+```bash
+credential-process [OPTIONS]
+```
+
+### Options
+
+| Flag | Description |
+|------|-------------|
+| `--profile`, `-p` | Configuration profile to use (auto-detected if single profile) |
+| `--version`, `-v` | Show version |
+| `--set-client-secret` | Store client secret in OS secure storage (for confidential client auth) |
+| `--clear-cache` | Clear cached credentials and force re-authentication |
+| `--check-expiration` | Check if credentials need refresh (exit 0 if valid, 1 if expired) |
+| `--refresh-if-needed` | Refresh credentials if expired (for cron jobs with session storage) |
+| `--get-monitoring-token` | Get cached monitoring token instead of AWS credentials |
+
+### Confidential Client Setup
+
+For organizations using private/confidential auth flows (e.g., Entra ID with client secret), end users must store the client secret after installation:
+
+```bash
+~/claude-code-with-bedrock/credential-process --set-client-secret
+```
+
+For multi-profile setups, specify the profile:
+
+```bash
+~/claude-code-with-bedrock/credential-process --set-client-secret --profile MyProfile
+```
+
+The secret is stored in the OS secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service).

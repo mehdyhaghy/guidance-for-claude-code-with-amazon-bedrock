@@ -222,9 +222,8 @@ class MultiProviderAuth:
             if not secret:
                 raise ValueError(
                     f"Confidential client secret not found in OS secure storage for profile '{self.profile}'. "
-                    "Run the installer to configure it, or store manually:\n"
-                    "  python -c \"import keyring; keyring.set_password("
-                    f"'claude-code-with-bedrock', '{self.profile}-client-secret', '<your-secret>')\""
+                    "Run the following command to configure it:\n"
+                    f"  credential-process --set-client-secret --profile {self.profile}"
                 )
             profile_config["client_secret"] = secret
             # Remove any plaintext secret from config to prevent accidental use
@@ -1969,8 +1968,30 @@ def main():
         action="store_true",
         help="Refresh credentials if expired (for cron jobs with session storage)",
     )
+    parser.add_argument(
+        "--set-client-secret",
+        action="store_true",
+        help="Store client secret in OS secure storage (for confidential client auth)",
+    )
 
     args = parser.parse_args()
+
+    # Handle set-secret before creating MultiProviderAuth (which validates the secret)
+    if args.set_client_secret:
+        import getpass
+
+        profile = args.profile
+        secret = getpass.getpass(f"Enter client secret for profile '{profile}': ")
+        if not secret:
+            print("Error: client secret cannot be empty", file=sys.stderr)
+            sys.exit(1)
+        try:
+            keyring.set_password("claude-code-with-bedrock", f"{profile}-client-secret", secret)
+            print(f"✓ Client secret stored in OS secure storage for profile '{profile}'", file=sys.stderr)
+            sys.exit(0)
+        except Exception as e:
+            print(f"Error storing client secret: {e}", file=sys.stderr)
+            sys.exit(1)
 
     auth = MultiProviderAuth(profile=args.profile)
 
