@@ -1971,7 +1971,10 @@ def main():
         secret = getpass.getpass(f"Enter client secret for profile '{profile}' (blank to clear): ")
         try:
             if not secret:
-                keyring.delete_password("claude-code-with-bedrock", f"{profile}-client-secret")
+                try:
+                    keyring.delete_password("claude-code-with-bedrock", f"{profile}-client-secret")
+                except Exception:
+                    pass
                 print(f"✓ Client secret cleared for profile '{profile}'", file=sys.stderr)
             else:
                 keyring.set_password("claude-code-with-bedrock", f"{profile}-client-secret", secret)
