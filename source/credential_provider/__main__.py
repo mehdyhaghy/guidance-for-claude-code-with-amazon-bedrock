@@ -204,30 +204,17 @@ class MultiProviderAuth:
         profile_config.setdefault("aws_region", "us-east-1")
         profile_config.setdefault("provider_type", "auto")
         profile_config.setdefault("credential_storage", "session")
-        profile_config.setdefault("client_type", "public")  # "public" (PKCE only) or "confidential" (with client_secret)
         profile_config.setdefault(
             "max_session_duration", 43200 if profile_config.get("federation_type") == "direct" else 28800
         )
 
-        # For confidential clients, load client_secret from OS secure storage (not config.json)
-        if profile_config.get("client_type") == "confidential":
-            try:
-                secret = keyring.get_password("claude-code-with-bedrock", f"{self.profile}-client-secret")
-            except Exception as e:
-                raise ValueError(
-                    "Failed to access OS secure storage for client secret. "
-                    "Ensure a keyring backend is available (macOS Keychain, Windows Credential Manager, "
-                    f"or Linux Secret Service): {e}"
-                ) from e
-            if not secret:
-                raise ValueError(
-                    f"Confidential client secret not found in OS secure storage for profile '{self.profile}'. "
-                    "Run the following command to configure it:\n"
-                    f"  credential-process --set-client-secret --profile {self.profile}"
-                )
+        # Auto-detect confidential client: if a secret exists in OS keyring, use it
+        try:
+            secret = keyring.get_password("claude-code-with-bedrock", f"{self.profile}-client-secret")
+        except Exception:
+            secret = None
+        if secret:
             profile_config["client_secret"] = secret
-            # Remove any plaintext secret from config to prevent accidental use
-            profile_config.pop("client_secret_plaintext", None)
 
         return profile_config
 
@@ -847,8 +834,8 @@ class MultiProviderAuth:
             "code_verifier": code_verifier,
         }
 
-        # Include client_secret for confidential clients
-        if self.config.get("client_type") == "confidential":
+        # Include client_secret if stored in OS keyring (confidential client)
+        if self.config.get("client_secret"):
             token_data["client_secret"] = self.config["client_secret"]
 
         # Build token endpoint URL
