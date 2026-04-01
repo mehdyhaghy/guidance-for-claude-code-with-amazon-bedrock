@@ -266,7 +266,7 @@ To enforce the confidential client flow in Entra ID:
 1. Navigate to **App Registration** → **Authentication**
 2. Remove `http://localhost:8400/callback` from **Mobile and desktop applications** (if present)
 3. Under **Web** platform, add `http://localhost:8400/callback` as a redirect URI
-4. Set **Allow public client flows** to **No**
+4. Set **Allow public client flows** to **Disabled**
 5. Navigate to **Certificates & secrets** → **Client secrets** and create a new secret
 
 End users store the client secret after installing the distributed package:
