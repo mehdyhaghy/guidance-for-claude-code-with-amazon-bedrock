@@ -58,7 +58,7 @@ The authentication flow begins when Claude Code requests AWS credentials through
 
 The system supports two client modes:
 
-- **Public client** (default): Uses PKCE only — no client secret required. Recommended for most deployments.
+- **Public client** (default): Uses PKCE only — no client secret required.
 - **Confidential client**: Uses PKCE combined with a client secret stored in the OS secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
 
 After successful authentication, the identity provider redirects back to the local callback server with an authorization code. The credential process exchanges this code for OIDC tokens. The system then uses one of two authentication methods to obtain AWS credentials:
