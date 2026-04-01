@@ -390,33 +390,18 @@ By default, the credential provider uses a **public client** with PKCE. If your 
    - Under **Advanced Settings** → **Grant Types**: ensure **Authorization Code** and **Refresh Token** are checked
 6. Click **Save Changes**
 
-### Configure the Credential Provider
+### Admin: Configure via `ccwb init`
 
-Update your `config.json` profile:
+Use the confidential client ID when running `ccwb init`. The config is baked into the package during `ccwb package` and distributed to users — no manual config.json editing needed.
 
-```json
-{
-  "profiles": {
-    "default": {
-      "provider_type": "auth0",
-      "provider_domain": "your-tenant.auth0.com",
-      "client_id": "<confidential-client-id>",
-      "identity_pool_id": "<your-identity-pool-id>"
-    }
-  }
-}
-```
+### End User: Store the Client Secret
 
-### Store the Client Secret in OS Secure Storage
-
-Store the secret using the built-in command — it will be saved in your OS keychain/credential manager, never in `config.json`:
+After installing the distributed package, users store the secret in OS secure storage:
 
 ```bash
 credential-process --set-client-secret
 ```
 
-To clear the secret and revert to public PKCE flow, run the same command and press Enter without typing a value.
+To clear the secret and revert to public PKCE flow, run the same command and press Enter (blank).
 
-Replace `default` with your profile name if using a non-default profile.
-
-> **Note**: PKCE is still used alongside the client secret for defense-in-depth. The secret is protected by macOS Keychain, Windows Credential Manager, or Linux Secret Service.
+> **Note**: PKCE is still used alongside the client secret for defense-in-depth.
