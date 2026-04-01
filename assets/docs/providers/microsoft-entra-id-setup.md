@@ -285,7 +285,6 @@ Update your `config.json` profile:
       "provider_type": "azure",
       "provider_domain": "login.microsoftonline.com/<tenant-id>",
       "client_id": "<application-client-id>",
-      "client_type": "confidential",
       "identity_pool_id": "<your-identity-pool-id>"
     }
   }
@@ -294,11 +293,13 @@ Update your `config.json` profile:
 
 ### Store the Client Secret in OS Secure Storage
 
-The client secret is stored in your OS keychain/credential manager — never in `config.json`:
+Store the secret using the built-in command — it will be saved in your OS keychain/credential manager, never in `config.json`:
 
 ```bash
-python -c "import keyring; keyring.set_password('claude-code-with-bedrock', 'default-client-secret', '<client-secret-value>')"
+credential-process --set-client-secret
 ```
+
+To clear the secret and revert to public PKCE flow, run the same command and press Enter without typing a value.
 
 Replace `default` with your profile name if using a non-default profile.
 

@@ -1074,7 +1074,7 @@ credential-process [OPTIONS]
 |------|-------------|
 | `--profile`, `-p` | Configuration profile to use (auto-detected if single profile) |
 | `--version`, `-v` | Show version |
-| `--set-client-secret` | Store client secret in OS secure storage (for confidential client auth) |
+| `--set-client-secret` | Store or clear client secret in OS secure storage (blank input clears it) |
 | `--clear-cache` | Clear cached credentials and force re-authentication |
 | `--check-expiration` | Check if credentials need refresh (exit 0 if valid, 1 if expired) |
 | `--refresh-if-needed` | Refresh credentials if expired (for cron jobs with session storage) |
@@ -1093,5 +1093,7 @@ For multi-profile setups, specify the profile:
 ```bash
 ~/claude-code-with-bedrock/credential-process --set-client-secret --profile MyProfile
 ```
+
+To clear the client secret and revert to public PKCE flow, run the same command and press Enter without typing a secret.
 
 The secret is stored in the OS secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
