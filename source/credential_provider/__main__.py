@@ -1981,40 +1981,18 @@ def main():
             print(f"Error storing client secret: {e}", file=sys.stderr)
             sys.exit(1)
 
-    # Handle clear-cache before creating MultiProviderAuth (which requires config)
+    auth = MultiProviderAuth(profile=args.profile)
+
+    # Handle cache clearing request
     if args.clear_cache:
-        profile = args.profile
-        cleared = []
-        try:
-            if platform.system() == "Windows":
-                for entry in [f"{profile}-keys", f"{profile}-token1", f"{profile}-token2", f"{profile}-meta"]:
-                    if keyring.get_password("claude-code-with-bedrock", entry):
-                        keyring.set_password("claude-code-with-bedrock", entry, "EXPIRED")
-                cleared.append("keyring credentials")
-            else:
-                if keyring.get_password("claude-code-with-bedrock", f"{profile}-credentials"):
-                    keyring.set_password("claude-code-with-bedrock", f"{profile}-credentials",
-                        json.dumps({"Version": 1, "AccessKeyId": "EXPIRED", "SecretAccessKey": "EXPIRED",
-                                    "SessionToken": "EXPIRED", "Expiration": "2000-01-01T00:00:00Z"}))
-                    cleared.append("keyring credentials")
-        except Exception:
-            pass
-        try:
-            if keyring.get_password("claude-code-with-bedrock", f"{profile}-monitoring"):
-                keyring.set_password("claude-code-with-bedrock", f"{profile}-monitoring",
-                    json.dumps({"token": "EXPIRED", "expires": 0, "email": "", "profile": profile}))
-                cleared.append("keyring monitoring token")
-        except Exception:
-            pass
+        cleared = auth.clear_cached_credentials()
         if cleared:
-            print(f"Cleared cached credentials for profile '{profile}':", file=sys.stderr)
+            print(f"Cleared cached credentials for profile '{args.profile}':", file=sys.stderr)
             for item in cleared:
                 print(f"  • {item}", file=sys.stderr)
         else:
-            print(f"No cached credentials found for profile '{profile}'", file=sys.stderr)
+            print(f"No cached credentials found for profile '{args.profile}'", file=sys.stderr)
         sys.exit(0)
-
-    auth = MultiProviderAuth(profile=args.profile)
 
     # Handle monitoring token request
     if args.get_monitoring_token:
