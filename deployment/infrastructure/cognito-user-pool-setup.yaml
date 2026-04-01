@@ -153,60 +153,6 @@ Resources:
         - given_name
         - family_name
 
-  # Confidential CLI client (with client secret for private auth flow)
-  UserPoolConfidentialClient:
-    Type: AWS::Cognito::UserPoolClient
-    Properties:
-      ClientName: !Sub '${UserPoolName}-confidential-client'
-      UserPoolId: !Ref UserPool
-      GenerateSecret: true
-      AllowedOAuthFlows:
-        - code
-      AllowedOAuthScopes:
-        - openid
-        - email
-        - profile
-      AllowedOAuthFlowsUserPoolClient: true
-      CallbackURLs: !Ref CallbackURLs
-      LogoutURLs: !Ref LogoutURLs
-      ExplicitAuthFlows:
-        - ALLOW_REFRESH_TOKEN_AUTH
-      AuthSessionValidity: 3
-      RefreshTokenValidity: 600
-      AccessTokenValidity: 10
-      IdTokenValidity: 60
-      TokenValidityUnits:
-        RefreshToken: minutes
-        AccessToken: minutes
-        IdToken: minutes
-      PreventUserExistenceErrors: ENABLED
-      EnableTokenRevocation: true
-      SupportedIdentityProviders:
-        - !If [UseFederate, !Ref ExternalIdentityProvider, COGNITO]
-        - COGNITO
-      ReadAttributes:
-        - email
-        - email_verified
-        - preferred_username
-        - given_name
-        - family_name
-        - sub
-      WriteAttributes:
-        - email
-        - preferred_username
-        - given_name
-        - family_name
-
-  # Store confidential client secret in Secrets Manager
-  ConfidentialClientSecret:
-    Type: AWS::CloudFormation::CustomResource
-    DependsOn: UserPoolConfidentialClient
-    Properties:
-      ServiceToken: !GetAtt SecretStoreFunction.Arn
-      UserPoolId: !Ref UserPool
-      ClientId: !Ref UserPoolConfidentialClient
-      SecretName: !Sub '${AWS::StackName}-confidential-client-secret'
-
   # Distribution Web Client (for authenticated landing page)
   # This is a confidential client with client secret for ALB OIDC authentication
   DistributionWebClient:
@@ -529,18 +475,6 @@ Outputs:
     Value: !GetAtt DistributionWebClientSecret.SecretArn
     Export:
       Name: !Sub '${AWS::StackName}-DistributionWebClientSecretArn'
-
-  ConfidentialClientId:
-    Description: Cognito Confidential App Client ID (CLI private auth - has secret)
-    Value: !Ref UserPoolConfidentialClient
-    Export:
-      Name: !Sub '${AWS::StackName}-ConfidentialClientId'
-
-  ConfidentialClientSecretArn:
-    Description: Secrets Manager ARN for confidential CLI client secret
-    Value: !GetAtt ConfidentialClientSecret.SecretArn
-    Export:
-      Name: !Sub '${AWS::StackName}-ConfidentialClientSecretArn'
 
   UserPoolDomain:
     Description: Cognito User Pool Domain
