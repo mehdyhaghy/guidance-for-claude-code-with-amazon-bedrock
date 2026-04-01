@@ -1085,15 +1085,9 @@ credential-process [OPTIONS]
 For organizations using private/confidential auth flows (e.g., Entra ID with client secret), end users must store the client secret after installation:
 
 ```bash
-~/claude-code-with-bedrock/credential-process --set-client-secret
+~/claude-code-with-bedrock/credential-process --set-client-secret --profile <profile-name>
 ```
 
-For multi-profile setups, specify the profile:
-
-```bash
-~/claude-code-with-bedrock/credential-process --set-client-secret --profile MyProfile
-```
+The profile name is shown during installation (e.g., `dev-ccwb-us-eat-1`). It must be specified — the `--profile` flag is required.
 
 To clear the client secret and revert to public PKCE flow, run the same command and press Enter without typing a secret.
-
-The secret is stored in the OS secure storage (macOS Keychain, Windows Credential Manager, or Linux Secret Service).
