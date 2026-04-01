@@ -1968,13 +1968,14 @@ def main():
         import getpass
 
         profile = args.profile
-        secret = getpass.getpass(f"Enter client secret for profile '{profile}': ")
-        if not secret:
-            print("Error: client secret cannot be empty", file=sys.stderr)
-            sys.exit(1)
+        secret = getpass.getpass(f"Enter client secret for profile '{profile}' (blank to clear): ")
         try:
-            keyring.set_password("claude-code-with-bedrock", f"{profile}-client-secret", secret)
-            print(f"✓ Client secret stored in OS secure storage for profile '{profile}'", file=sys.stderr)
+            if not secret:
+                keyring.delete_password("claude-code-with-bedrock", f"{profile}-client-secret")
+                print(f"✓ Client secret cleared for profile '{profile}'", file=sys.stderr)
+            else:
+                keyring.set_password("claude-code-with-bedrock", f"{profile}-client-secret", secret)
+                print(f"✓ Client secret stored in OS secure storage for profile '{profile}'", file=sys.stderr)
             sys.exit(0)
         except Exception as e:
             print(f"Error storing client secret: {e}", file=sys.stderr)
